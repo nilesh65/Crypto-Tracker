@@ -4,7 +4,10 @@
   padding: 0;
   box-sizing: border-box;
 }
-
+.icon{
+  height: 2rem;
+  vertical-align: middle;
+}
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   background-color: #0e1117;
