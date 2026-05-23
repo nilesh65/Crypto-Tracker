@@ -35,7 +35,7 @@ error}) => {
     }
   })
     return ( <div>
-        <h1><img src="/cryptocurrency.ico" alt="crypto" className="icon"/> Crypto Tracker</h1>
+        {/* <h1><img src="/cryptocurrency.ico" alt="crypto" className="icon"/> Crypto Tracker</h1> */}
     {loading && <Spinner />}
     {error && <div className="error">{error}</div> }
     <div className="top-controls">
