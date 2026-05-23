@@ -30,9 +30,7 @@ const CoinChart = ({ coinId }) => {
 
   useEffect(() => {
     const fetchPrices = async () => {
-      const res = await fetch(
-        `${API_URL}/${coinId}/market_chart?vs_currency=usd&days=7`
-      );
+      const res = await fetch(`${API_URL}/${coinId}/market_chart?vs_currency=usd&days=7`);
 
       const data = await res.json();
 
