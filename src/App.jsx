@@ -6,6 +6,9 @@ import Header from "./components/Header";
 import NotFoundPage from "./pages/not-found";
 import CoinDetails from "./pages/coin-details";
 import CoinDetailsPage from "./pages/coin-details";
+
+import MarketOverview from "./components/MarketOverview";
+
 const API_URL = import.meta.env.VITE_API_URL
 const App = () => {
   const [coins, setCoins] = useState([]);
@@ -17,14 +20,13 @@ const App = () => {
   useEffect(() => {
     const fetchCoins = async () => {
       try {
-        const res = await fetch(`${API_URL}&order=market_cap_desc&per_page=${limit}&page=1&
-sparkline=false`)
+        const res = await fetch(`${API_URL}&order=market_cap_desc&per_page=${limit}&page=1&sparkline=false`)
         if(!res.ok) throw new Error('Failed to fetch data');
         const data = await res.json();
-        console.log(data);
+        // console.log(data);
         setCoins(data);
       } catch (error) {
-        setError(error.messasge);
+        setError(error.message);
       }
       finally{
         setLoading(false);
@@ -35,20 +37,27 @@ sparkline=false`)
 
   return (
     <>
-    <Header />
+    <Header coins={coins} />
+   
     <Routes>
-      <Route path="/" element={
-    <HomePage
-      coins={coins}
-      filter={filter}
-      setFilter={setFilter}
-      limit={limit}
-      setLimit={setLimit}
-      sortBy={sortBy}
-      setSortBy={setSortBy}
-      loading={loading}
-      error={error}
-    />
+     <Route
+  path="/"
+  element={
+    <>
+      <MarketOverview coins={coins} />
+
+      <HomePage
+        coins={coins}
+        filter={filter}
+        setFilter={setFilter}
+        limit={limit}
+        setLimit={setLimit}
+        sortBy={sortBy}
+        setSortBy={setSortBy}
+        loading={loading}
+        error={error}
+      />
+    </>
   }
 />
       <Route path="/about" element={<AboutPage />} />
