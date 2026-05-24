@@ -20,7 +20,7 @@ const App = () => {
   useEffect(() => {
     const fetchCoins = async () => {
       try {
-        const res = await fetch(`${API_URL}&order=market_cap_desc&per_page=${limit}&page=1&sparkline=false`)
+        const res = await fetch(`${API_URL}&order=market_cap_desc&per_page=${limit}&page=1&sparkline=true`)
         if(!res.ok) throw new Error('Failed to fetch data');
         const data = await res.json();
         // console.log(data);
