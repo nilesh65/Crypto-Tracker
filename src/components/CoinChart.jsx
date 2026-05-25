@@ -29,37 +29,55 @@ const CoinChart = ({ coinId }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const controller = new AbortController();
+
     const fetchPrices = async () => {
-      const res = await fetch(`${API_URL}/${coinId}/market_chart?vs_currency=usd&days=7`);
+      try {
+        setLoading(true);
 
-      const data = await res.json();
+        const res = await fetch(
+          `${API_URL}/${coinId}/market_chart?vs_currency=usd&days=7`,
+          { signal: controller.signal }
+        );
 
-      const prices = data.prices.map((price) => ({
-        x: price[0],
-        y: price[1],
-      }));
+        if (!res.ok) throw new Error("Failed to fetch chart data");
 
-      setChartData({
-        datasets: [
-          {
-            label: 'Price (USD)',
-            data: prices,
-            fill: true,
-            borderColor: '#007bff',
-            backgroundColor: 'rgba(0, 123, 255, 0.1)',
-            pointRadius: 0,
-            tension: 0.3,
-          },
-        ],
-      });
+        const data = await res.json();
 
-      setLoading(false);
+        const prices = (data.prices || []).map((price) => ({
+          x: price[0],
+          y: price[1],
+        }));
+
+        setChartData({
+          datasets: [
+            {
+              label: 'Price (USD)',
+              data: prices,
+              fill: true,
+              borderColor: '#007bff',
+              backgroundColor: 'rgba(0, 123, 255, 0.1)',
+              pointRadius: 0,
+              tension: 0.3,
+            },
+          ],
+        });
+      } catch (err) {
+        if (err.name !== "AbortError") {
+          console.error(err);
+        }
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchPrices();
+
+    return () => controller.abort();
   }, [coinId]);
 
   if (loading) return <p>Loading Chart...</p>;
+  if (!chartData) return <p>No chart data available</p>;
 
   return (
     <div style={{ marginTop: '30px' }}>
@@ -74,9 +92,7 @@ const CoinChart = ({ coinId }) => {
           scales: {
             x: {
               type: 'time',
-              time: {
-                unit: 'day',
-              },
+              time: { unit: 'day' },
               ticks: {
                 autoSkip: true,
                 maxTicksLimit: 7,
