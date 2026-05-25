@@ -1,20 +1,61 @@
-const SortSelector = ({ sortBy, onSortChange }) => {
-  return (
-    <div className="controls">
-      <label htmlFor="sort">Sort By:</label>
+import { useState, useEffect, useRef } from "react";
 
-      <select
-        id="sort"
-        value={sortBy || "market_cap_desc"}
-        onChange={(e) => onSortChange(e.target.value)}
-      >
-        <option value="market_cap_asc">Market Cap (Low To High)</option>
-        <option value="market_cap_desc">Market Cap (High To Low)</option>
-        <option value="price_desc">Price (High To Low)</option>
-        <option value="price_asc">Price (Low To High)</option>
-        <option value="change_desc">24h Change (High To Low)</option>
-        <option value="change_asc">24h Change (Low To High)</option>
-      </select>
+const SORT_OPTIONS = [
+  { value: "market_cap_asc",  label: "Market Cap (Low To High)"  },
+  { value: "market_cap_desc", label: "Market Cap (High To Low)" },
+  { value: "price_desc",      label: "Price (High To Low)"       },
+  { value: "price_asc",       label: "Price (Low To High)"       },
+  { value: "change_desc",     label: "24h Change (High To Low)"  },
+  { value: "change_asc",      label: "24h Change (Low To High)"  },
+];
+
+const SortSelector = ({ sortBy, onSortChange }) => {
+  const [open, setOpen] = useState(false);
+const ref = useRef(null);
+
+useEffect(() => {
+  const handleClickOutside = (e) => {
+    if (ref.current && !ref.current.contains(e.target)) {
+      setOpen(false);
+    }
+  };
+  document.addEventListener("mousedown", handleClickOutside);
+  return () => document.removeEventListener("mousedown", handleClickOutside);
+}, []);
+
+  const current =
+    SORT_OPTIONS.find((o) => o.value === sortBy) || SORT_OPTIONS[1];
+
+  return (
+    <div className="controls" ref={ref}>
+      <label>Sort By:</label>
+
+      <div className="custom-select-wrapper">
+        <button
+          className="custom-select-trigger"
+          onClick={() => setOpen((prev) => !prev)}
+        >
+          {current.label}
+          <span className="custom-select-arrow">{open ? "▲" : "▼"}</span>
+        </button>
+
+        {open && (
+          <ul className="custom-select-options">
+            {SORT_OPTIONS.map((opt) => (
+              <li
+                key={opt.value}
+                className={`custom-select-option ${sortBy === opt.value ? "active" : ""}`}
+                onClick={() => {
+                  onSortChange(opt.value);
+                  setOpen(false);
+                }}
+              >
+                {opt.label}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </div>
   );
 };
