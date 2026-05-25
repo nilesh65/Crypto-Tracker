@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef} from "react";
 import { Sparklines, SparklinesLine } from "react-sparklines";
 import { Pencil, Trash2 } from "lucide-react";
 const MarketOverview = ({ coins = [] }) => {
@@ -17,8 +17,20 @@ const [editedName, setEditedName] = useState("");
   const [showCreateInput, setShowCreateInput] = useState(false);
   const [selectedWatchlistId, setSelectedWatchlistId] = useState(null);
 
+const [dropdownOpen, setDropdownOpen] = useState(false);
   // 🔥 SEARCH STATE (RESTORED)
   const [searchInputs, setSearchInputs] = useState({});
+  const ref = useRef(null);
+
+useEffect(() => {
+  const handleClickOutside = (e) => {
+    if (ref.current && !ref.current.contains(e.target)) {
+      setDropdownOpen(false); // was setOpen(false) — wrong state
+    }
+  };
+  document.addEventListener("mousedown", handleClickOutside);
+  return () => document.removeEventListener("mousedown", handleClickOutside);
+}, []);
 
   useEffect(() => {
     localStorage.setItem("crypto-watchlists", JSON.stringify(watchlists));
@@ -227,20 +239,35 @@ const saveWatchlistName = (watchlistId) => {
           </div>
         )}
 
-        {/* SELECT WATCHLIST */}
-        {watchlists.length > 1 && (
-          <select
-            className="watchlist-selector"
-            value={selectedWatchlistId || ""}
-            onChange={(e) => setSelectedWatchlistId(Number(e.target.value))}
+       {watchlists.length > 1 && (
+  <div className="custom-select-wrapper" ref={ref}>
+    <button
+      className="custom-select-trigger"
+      onClick={() => setDropdownOpen((prev) => !prev)}
+      ref={ref}
+    >
+      {watchlists.find((w) => w.id === selectedWatchlistId)?.name || "Select"}
+      <span className="custom-select-arrow">{dropdownOpen ? "▲" : "▼"}</span>
+    </button>
+
+    {dropdownOpen && (
+      <ul className="custom-select-options">
+        {watchlists.map((w) => (
+          <li
+            key={w.id}
+            className={`custom-select-option ${w.id === selectedWatchlistId ? "active" : ""}`}
+            onClick={() => {
+              setSelectedWatchlistId(w.id);
+              setDropdownOpen(false);
+            }}
           >
-            {watchlists.map((w) => (
-              <option key={w.id} value={w.id}>
-                {w.name}
-              </option>
-            ))}
-          </select>
-        )}
+            {w.name}
+          </li>
+        ))}
+      </ul>
+    )}
+  </div>
+)}
 
         {/* WATCHLIST CONTENT */}
         {watchlists
