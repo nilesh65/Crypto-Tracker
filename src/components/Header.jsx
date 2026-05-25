@@ -23,8 +23,8 @@ const Header = ({ coins = [] }) => {
 
       <div className="ticker-wrapper">
         <div className="ticker">
-          {[...tickerCoins, ...tickerCoins].map((coin) => (
-            <div className="ticker-item" key={coin.id}>
+          {[...tickerCoins, ...tickerCoins].map((coin, i) => (
+  <div className="ticker-item" key={`${coin.id}-${i}`}>
               <img src={coin.image} alt={coin.name} />
 
               <span className="ticker-symbol">
