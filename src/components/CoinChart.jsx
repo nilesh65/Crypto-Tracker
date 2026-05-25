@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Line } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -9,6 +9,7 @@ import {
   Tooltip,
   Legend,
   TimeScale,
+  Filler
 } from 'chart.js';
 import 'chartjs-adapter-date-fns';
 
@@ -19,14 +20,26 @@ ChartJS.register(
   LineElement,
   Tooltip,
   Legend,
+  Filler,
   TimeScale
 );
 
 const API_URL = import.meta.env.VITE_COIN_API_URL;
 
+const RANGES = [
+  { label: '1D',  days: 1   },
+  { label: '7D',  days: 7   },
+  { label: '1M',  days: 30  },
+  { label: '3M',  days: 90  },
+  { label: '6M',  days: 180 },
+  { label: '1Y',  days: 365 },
+];
+
 const CoinChart = ({ coinId }) => {
   const [chartData, setChartData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [selectedDays, setSelectedDays] = useState(7);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -34,13 +47,14 @@ const CoinChart = ({ coinId }) => {
     const fetchPrices = async () => {
       try {
         setLoading(true);
+        setError(null);
 
         const res = await fetch(
-          `${API_URL}/${coinId}/market_chart?vs_currency=usd&days=7`,
+          `${API_URL}/${coinId}/market_chart?vs_currency=usd&days=${selectedDays}`,
           { signal: controller.signal }
         );
 
-        if (!res.ok) throw new Error("Failed to fetch chart data");
+        if (!res.ok) throw new Error("You have maid too many requests that's why Coin Gecko API rate limit has been hit. try after 1 min again as free version has limits");
 
         const data = await res.json();
 
@@ -55,8 +69,8 @@ const CoinChart = ({ coinId }) => {
               label: 'Price (USD)',
               data: prices,
               fill: true,
-              borderColor: '#007bff',
-              backgroundColor: 'rgba(0, 123, 255, 0.1)',
+              borderColor: '#3b82f6',
+              backgroundColor: 'rgba(59, 130, 246, 0.08)',
               pointRadius: 0,
               tension: 0.3,
             },
@@ -65,6 +79,7 @@ const CoinChart = ({ coinId }) => {
       } catch (err) {
         if (err.name !== "AbortError") {
           console.error(err);
+          setError("You have maid too many requests that's why Coin Gecko API rate limit has been hit. try after 1 min again as free version has limits");
         }
       } finally {
         setLoading(false);
@@ -74,38 +89,57 @@ const CoinChart = ({ coinId }) => {
     fetchPrices();
 
     return () => controller.abort();
-  }, [coinId]);
+  }, [coinId, selectedDays]);
 
-  if (loading) return <p>Loading Chart...</p>;
-  if (!chartData) return <p>No chart data available</p>;
+  const timeUnit = useMemo(() => {
+    if (selectedDays === 1)   return 'hour';
+    if (selectedDays <= 30)   return 'day';
+    return 'month';
+  }, [selectedDays]);
+
+  const options = useMemo(() => ({
+    responsive: true,
+    plugins: {
+      legend: { display: false },
+      tooltip: { mode: 'index', intersect: false },
+    },
+    scales: {
+      x: {
+        type: 'time',
+        time: { unit: timeUnit },
+        ticks: { autoSkip: true, maxTicksLimit: 8 },
+      },
+      y: {
+        ticks: {
+          callback: (value) => `$${value.toLocaleString()}`,
+        },
+      },
+    },
+  }), [timeUnit]);
 
   return (
     <div style={{ marginTop: '30px' }}>
-      <Line
-        data={chartData}
-        options={{
-          responsive: true,
-          plugins: {
-            legend: { display: false },
-            tooltip: { mode: 'index', intersect: false },
-          },
-          scales: {
-            x: {
-              type: 'time',
-              time: { unit: 'day' },
-              ticks: {
-                autoSkip: true,
-                maxTicksLimit: 7,
-              },
-            },
-            y: {
-              ticks: {
-                callback: (value) => `$${value.toLocaleString()}`,
-              },
-            },
-          },
-        }}
-      />
+
+      {/* Range Selector */}
+      <div className="chart-range-selector">
+        {RANGES.map((range) => (
+          <button
+            key={range.days}
+            className={`chart-range-btn ${selectedDays === range.days ? 'active' : ''}`}
+            onClick={() => setSelectedDays(range.days)}
+          >
+            {range.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Chart */}
+      {loading && <p className="chart-status">Loading chart...</p>}
+      {error  && <p className="chart-status chart-error">{error}</p>}
+      {!loading && !error && chartData && (
+        <Line data={chartData} options={options} />
+      )}
+
     </div>
   );
 };

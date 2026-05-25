@@ -1152,3 +1152,45 @@ h1 {
   background: #2563eb;
   color: white;
 }
+
+/* ===== COIN CHART ===== */
+
+.chart-range-selector {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.chart-range-btn {
+  padding: 0.4rem 0.9rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.chart-range-btn:hover {
+  border-color: #3b82f6;
+  color: white;
+}
+
+.chart-range-btn.active {
+  background: #3b82f6;
+  border-color: #3b82f6;
+  color: white;
+}
+
+.chart-status {
+  text-align: center;
+  color: var(--muted);
+  margin-top: 2rem;
+}
+
+.chart-error {
+  color: #ff8b8b;
+}

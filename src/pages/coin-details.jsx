@@ -17,7 +17,7 @@ const CoinDetailsPage = () => {
         setLoading(true);
 
         const res = await fetch(`${API_URL}/${id}`);
-        if (!res.ok) throw new Error("Failed to fetch data");
+        if (!res.ok) throw new Error("You have maid too many requests that's why Coin Gecko API rate limit has been hit. try after 1 min again as free version has limits");
 
         const data = await res.json();
         setCoin(data);
