@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Sparklines, SparklinesLine } from "react-sparklines";
-
+import { Pencil, Trash2 } from "lucide-react";
 const MarketOverview = ({ coins = [] }) => {
   const [watchlists, setWatchlists] = useState(() => {
     try {
@@ -10,7 +10,9 @@ const MarketOverview = ({ coins = [] }) => {
       return [];
     }
   });
-  
+  const [showSearch, setShowSearch] = useState({});
+const [editingWatchlistId, setEditingWatchlistId] = useState(null);
+const [editedName, setEditedName] = useState("");
   const [newWatchlistName, setNewWatchlistName] = useState("");
   const [showCreateInput, setShowCreateInput] = useState(false);
   const [selectedWatchlistId, setSelectedWatchlistId] = useState(null);
@@ -44,7 +46,37 @@ const MarketOverview = ({ coins = [] }) => {
     setNewWatchlistName("");
     setShowCreateInput(false);
   };
+  const deleteWatchlist = (watchlistId) => {
+  const updated = watchlists.filter((w) => w.id !== watchlistId);
 
+  setWatchlists(updated);
+
+  if (updated.length > 0) {
+    setSelectedWatchlistId(updated[0].id);
+  } else {
+    setSelectedWatchlistId(null);
+  }
+};
+
+const startEditing = (list) => {
+  setEditingWatchlistId(list.id);
+  setEditedName(list.name);
+};
+
+const saveWatchlistName = (watchlistId) => {
+  if (!editedName.trim()) return;
+
+  setWatchlists((prev) =>
+    prev.map((list) =>
+      list.id === watchlistId
+        ? { ...list, name: editedName }
+        : list,
+    ),
+  );
+
+  setEditingWatchlistId(null);
+  setEditedName("");
+};
   const addCoinToWatchlist = (watchlistId, coin) => {
     const updated = watchlists.map((list) => {
       if (list.id !== watchlistId) return list;
@@ -68,6 +100,11 @@ const MarketOverview = ({ coins = [] }) => {
       ...prev,
       [watchlistId]: "",
     }));
+
+    setShowSearch((prev) => ({
+  ...prev,
+  [watchlistId]: false,
+}));
   };
 
   const removeCoin = (watchlistId, coinId) => {
@@ -121,7 +158,7 @@ const MarketOverview = ({ coins = [] }) => {
               </div>
 
               <span className="green">
-                ▲ {coin.price_change_percentage_24h.toFixed(2)}%
+                ▲ {(coin.price_change_percentage_24h || 0).toFixed(2)}%
               </span>
             </div>
           ))}
@@ -154,7 +191,7 @@ const MarketOverview = ({ coins = [] }) => {
               </div>
 
               <span className="red">
-                ▼ {Math.abs(coin.price_change_percentage_24h).toFixed(2)}%
+                ▼ {Math.abs(coin.price_change_percentage_24h || 0).toFixed(2)}%
               </span>
             </div>
           ))}
@@ -222,25 +259,64 @@ const MarketOverview = ({ coins = [] }) => {
             return (
               <div key={list.id} className="watchlist-box">
                 <div className="watchlist-title-row">
-                  <h2 className="watchlist-big-title">{list.name}</h2>
+  {editingWatchlistId === list.id ? (
+    <div className="edit-watchlist-row">
+      <input
+        value={editedName}
+        onChange={(e) => setEditedName(e.target.value)}
+        className="watchlist-edit-input"
+      />
 
-                  {list.coins.length < 3 && (
-                    <button
-                      className="add-new-stock-btn"
-                      onClick={() =>
-                        setSearchInputs((prev) => ({
-                          ...prev,
-                          [list.id]: prev[list.id] || "",
-                        }))
-                      }
-                    >
-                      + Add Coin
-                    </button>
-                  )}
-                </div>
+      <button
+        className="save-watchlist-btn"
+        onClick={() => saveWatchlistName(list.id)}
+      >
+        Save
+      </button>
+    </div>
+  ) : (
+    <>
+      <h2 className="watchlist-big-title">{list.name}</h2>
+
+      <div className="watchlist-actions">
+        {/* EDIT */}
+        <button
+          className="icon-btn"
+          onClick={() => startEditing(list)}
+        >
+          <Pencil size={18} />
+        </button>
+
+        {/* DELETE */}
+        <button
+          className="icon-btn delete"
+          onClick={() => deleteWatchlist(list.id)}
+        >
+          <Trash2 size={18} />
+        </button>
+
+        {/* ADD COIN */}
+        {/* ADD COIN */}
+{list.coins.length < 3 && (
+  <button
+    className="add-new-stock-btn"
+    onClick={() =>
+      setShowSearch((prev) => ({
+        ...prev,
+        [list.id]: !prev[list.id],
+      }))
+    }
+  >
+    + Add Coin
+  </button>
+)}
+      </div>
+    </>
+  )}
+</div>
 
                 {/* SEARCH INPUT (RESTORED) */}
-                {list.coins.length < 3 && (
+                {showSearch[list.id] && list.coins.length < 3 && (
                   <input
                     className="watchlist-search"
                     placeholder="Search coin..."
@@ -299,7 +375,7 @@ const MarketOverview = ({ coins = [] }) => {
                           }
                         >
                           {coin.price_change_percentage_24h >= 0 ? "▲" : "▼"}{" "}
-                          {Math.abs(coin.price_change_percentage_24h).toFixed(
+                          {Math.abs(coin.price_change_percentage_24h || 0).toFixed(
                             2,
                           )}
                           %
