@@ -3,6 +3,7 @@ import LimitSelector from "../components/LimitSelector";
 import FilterInput from "../components/FilterInput";
 import SortSelector from "../components/SortSelector";
 import Spinner from "../components/Spinner";
+import SkeletonCard from "../components/Skeleton";
 
 const HomePage = ({
   coins,
@@ -56,7 +57,13 @@ const HomePage = ({
 
   return (
     <div>
-      {loading && <Spinner />}
+    {loading && (
+  <main className="grid">
+    {Array.from({ length: limit }).map((_, i) => (
+      <SkeletonCard key={i} />
+    ))}
+  </main>
+)}
       {error && <div className="error">{error}</div>}
 
       <div className="top-controls">
